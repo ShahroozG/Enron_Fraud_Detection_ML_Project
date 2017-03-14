@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-# import sys
-# sys.path.append("../tools/")
+import sys
+sys.path.append("../tools/")
 
 import pickle
 import matplotlib.pyplot
@@ -9,8 +9,8 @@ import pandas
 import copy
 import numpy as np
 
-# from feature_format import featureFormat, targetFeatureSplit
-# from tester import dump_classifier_and_data
+from feature_format import featureFormat, targetFeatureSplit
+from tester import dump_classifier_and_data
 
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
@@ -23,11 +23,15 @@ import numpy as np
 # 'loan_advances', 'from_messages', 'other', 'from_this_person_to_poi', 'director_fees', 'deferred_income',\
 # 'long_term_incentive', 'from_poi_to_this_person', 'bonus_square', 'stock_square']
 
-# 'shared_receipt_with_poi',
-### SH: financial features only
+### SH: financial features only plus a few features from emails data
+#features_list = ['poi','shared_receipt_with_poi', 'from_poi_to_this_person','from_this_person_to_poi', 'total_payments',\
+# 'restricted_stock', 'other', 'expenses','salary', 'deferral_payments', \
+# 'loan_advances', 'director_fees', 'deferred_income','long_term_incentive', 'bonus_square', 'exercised_stock_square']
+
+### SH: Final features
 features_list = ['poi','shared_receipt_with_poi', 'from_poi_to_this_person', 'from_this_person_to_poi', 'total_payments',\
- 'restricted_stock', 'other', 'restricted_stock_deferred', 'total_stock_value', 'expenses','salary', 'deferral_payments', \
- 'loan_advances', 'director_fees', 'deferred_income','long_term_incentive', 'bonus_square', 'exercised_stock_square']
+ 'restricted_stock', 'other', 'total_stock_value', 'expenses','salary', 'deferral_payments', \
+ 'director_fees', 'deferred_income','long_term_incentive', 'bonus_square', 'exercised_stock_square']
 
 ### Load the dictionary containing the dataset
 path_1 = "C:/Users/Shahrooz/Desktop/P5-ML/ud120-projects/final_project/"
@@ -37,7 +41,11 @@ with open(path_1 + "final_project_dataset.pkl", "r") as data_file:
 ### Task 2: Remove outliers
 ### SH: removing the 'TOTAL' outlier
 data_dict.pop("TOTAL", 0)
-## These two other outliers removal doesn't cause better performance so I didn't remove them
+### SH: Two data points with very large number of NaNs; The second one is a company and not a person
+#data_dict.pop("LOCKHART EUGENE E", 0)
+#data_dict.pop("THE TRAVEL AGENCY IN THE PARK")
+
+### SH: These two other outliers removal doesn't cause better performance so I didn't remove them
 #data_dict.pop("LAY KENNETH L", 0)
 #data_dict.pop("SKILLING JEFFREY K", 0)
 
@@ -105,7 +113,7 @@ clf_NB = Pipeline(estimators_NB)
 grid_search_NB = GridSearchCV(clf_NB, param_grid=params_NB, scoring='f1')
 
 ### SVM
-estimators_SVM = [('selector', selector), ('classifier', classifier_SVM)]
+estimators_SVM = [('scaling', scaler), ('selector', selector), ('classifier', classifier_SVM)]
 params_SVM = dict(selector__k = [5, 8], classifier__C = [1, 10, 100, 1000, 10000])
 clf_SVM = Pipeline(estimators_SVM)
 grid_search_SVM = GridSearchCV(clf_SVM, param_grid=params_SVM, scoring='f1')
@@ -155,7 +163,7 @@ print "F1_Score_NB: ", f1_NB
 #clf_SVM = grid_search_SVM.best_estimator_
 #print clf_SVM
 #pred_SVM = clf_SVM.predict(features_test)
-#precision_SVM = precision_score(pred, labels_test)
+#precision_SVM = precision_score(pred_SVM, labels_test)
 #recall_SVM = recall_score(pred_SVM, labels_test)
 #f1_SVM = 2 * (precision_SVM * recall_SVM)/(precision_SVM + recall_SVM)
 #print "Precision_SVM: ", precision_SVM
@@ -168,7 +176,7 @@ grid_search_DT.fit(features_train, labels_train)
 clf_DT = grid_search_DT.best_estimator_
 print clf_DT
 pred_DT = clf_DT.predict(features_test)
-precision_DT = accuracy_score(pred, labels_test)
+precision_DT = accuracy_score(pred_DT, labels_test)
 recall_DT = recall_score(pred_DT, labels_test)
 f1_DT = 2 * (precision_DT * recall_DT)/(precision_DT + recall_DT)
 print "Precision_DT: ", precision_DT
